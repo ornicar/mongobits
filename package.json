@@ -1,0 +1,11 @@
+{
+  "name": "mongobits",
+  "version": "1.0.0",
+  "description": "selectively export parts of a mongo DB",
+  "main": "index.js",
+  "author": "Thibault Duplessis",
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^2.2.31"
+  }
+}
