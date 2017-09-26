@@ -5,12 +5,24 @@ const conf = require('./config');
 
 async function cursorOf(dbs, plan) {
   const sourceColl = collOf(dbs.source, plan);
-  if (plan.match) return sourceColl.find(plan.match).limit(plan.limit || Number.MAX_VALUE);
   if (plan.each) {
-    const foreignFieldValues = await collOf(dbs.dest, plan.each).distinct(plan.each.foreignField);
-    console.log(plan.each.match(foreignFieldValues));
-    return sourceColl.find(plan.each.match(foreignFieldValues));
+    const from = plan.each.from;
+    const limit = from.limit ? from.limit * 3 : undefined;
+    const cursor = makeCursor(collOf(dbs.dest, from), from.match, { [plan.each.foreignField]: true }, from.sort, limit);
+    const docs = await cursor.toArray();
+    const values = Array.from(new Set(docs.map(o => o[plan.each.foreignField]))).slice(0, plan.limit || Number.MAX_VALUE);
+    console.log(values.slice(0, 10));
+    return sourceColl.find(plan.each.match(values));
   }
+  return makeCursor(sourceColl, plan.match, plan.projection, plan.sort, plan.limit);
+}
+
+function makeCursor(coll, match, projection, sort, limit) {
+  const c = coll.find(match);
+  if (sort) c.sort(sort);
+  if (limit) c.limit(limit);
+  if (projection) c.project(projection);
+  return c;
 }
 
 function collOf(db, plan) {
@@ -19,24 +31,27 @@ function collOf(db, plan) {
 
 function insert(coll, doc) {
   return coll.insert(doc).catch(err => {
-    if (err.name === 'MongoError' && err.code === 11000) return;
+    if (err.name === 'MongoError') {
+      if ([11000, 15, 22].includes(err.code)) return;
+    }
     console.error(err)
     process.exit(1)
   });
 }
 
 async function runPlan(dbs, plan) {
-  console.log(`[${plan.coll}]`, plan);
+  function log(msg) { console.log(`[${plan.coll}]`, msg); }
+  log(JSON.stringify(plan));
   const cursor = await cursorOf(dbs, plan);
   const destColl = collOf(dbs.dest, plan);
   let nb = 0;
   while(await cursor.hasNext()) {
     nb++;
-    if (nb % 1000 === 0) console.log(`[${plan.coll}]`, nb);
+    if (nb % 1000 === 0) log(nb);
     const doc = await cursor.next();
     await insert(destColl, doc);
   }
-  console.log(`Inserted ${nb} documents`);
+  log(`Inserted ${nb} documents`);
 }
 
 async function run() {
@@ -48,6 +63,7 @@ async function run() {
   });
   console.log("Connected successfully to both DBs");
   await conf.plan.filter(o => !o.skip).reduce(async (acc, plan) => {
+    await acc;
     return await runPlan(dbs, plan);
   }, Promise.resolve(0));
   dbs.source.close();
