@@ -66,6 +66,13 @@ module.exports = {
     coll: 'pref',
     match: { _id: { $in: selectedUsers } }
   }, {
+    coll: 'crosstable2',
+    match: {
+      '$or': selectedUsers.map(u => ({
+        _id: { $regex: `^${u}/` }
+      }))
+    }
+  }, {
     coll: 'activity',
     match: {
       '$or': selectedUsers.map(u => ({
