@@ -7,6 +7,7 @@ const selectedUsers = [
 const selectedTeams = ['iran', 'kristos-team-chess-players', 'russian-chess-players', 'coders'];
 
 function transformUser(u) {
+  u.sha512 = false;
   u.salt = '';
   u.password = '11a6efa91890f4fdbdddf3c344d40b8a96eb5d5d'; // 'password'
 }
@@ -14,6 +15,7 @@ function transformUser(u) {
 module.exports = {
   source: 'mongodb://91.121.143.131:28945/lichess',
   dest: 'mongodb://localhost:27017/lichess',
+  ensureIndexes: false,
   plan: [{
     name: 'Selected users',
     coll: 'user4',
@@ -187,6 +189,41 @@ module.exports = {
     coll: 'f_post',
     sort: { createdAt: -1 },
     limit: 30000
+  }, {
+    coll: 'report',
+    sort: { createdAt: -1 },
+    limit: 10000
+  }, {
+    name: 'Users of reports',
+    coll: 'user4',
+    each: {
+      from: { coll: 'report' },
+      distinct: 'user',
+      match(uids) { return { _id: { $in: uids }}; }
+    },
+    transform: transformUser
+  }, {
+    coll: 'modlog',
+    sort: { date: -1 },
+    limit: 5000
+  }, {
+    name: 'Users of modlogs: mods',
+    coll: 'user4',
+    each: {
+      from: { coll: 'modlog' },
+      distinct: 'mod',
+      match(uids) { return { _id: { $in: uids }}; }
+    },
+    transform: transformUser
+  }, {
+    name: 'Users of modlogs: convicts',
+    coll: 'user4',
+    each: {
+      from: { coll: 'modlog' },
+      distinct: 'user',
+      match(uids) { return { _id: { $in: uids }}; }
+    },
+    transform: transformUser
   }, {
     name: 'Users of forum posts',
     coll: 'user4',

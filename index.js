@@ -88,7 +88,7 @@ async function run() {
     await acc;
     return await runPlan(dbs, plan);
   }, Promise.resolve(0));
-  await ensureIndexes(dbs);
+  if (config.ensureIndexes) await ensureIndexes(dbs);
   dbs.source.close();
   dbs.dest.close();
   console.log("Successfully closed both DBs");
