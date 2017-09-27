@@ -1,7 +1,8 @@
 const selectedUsers = [
   'astanehchess', 'penguingim1', 'chess-network', 'fishyvischy', 'thibault',
   'programfox', 'isaacly', 'revoof', 'arex', 'lance5500', 'arka50', 'lovlas', 'tonyro',
-  'lakin', 'toadofsky', 'veloce', 'clarkey', 'flugsio', 'happy0', 'freefal'];
+  'lakinwecker', 'toadofsky', 'veloce', 'clarkey', 'flugsio', 'happy0', 'freefal',
+  'kingscrusher-youtube', 'rzenaikrzys', 'vsim', 'bosspotato', 'opperwezen', 'sparklehorse'];
 
 module.exports = {
   source: 'mongodb://91.121.143.131:28945/lichess',
@@ -23,7 +24,10 @@ module.exports = {
   }, {
     coll: 'study',
     sort: { likes: -1 },
-    limit: 1000
+    limit: 500
+  }, {
+    coll: 'study',
+    match: { ownerId: { '$in': selectedUsers.filter(u => u !== 'lance5500') } }
   }, {
     coll: 'config',
     match: { _id: { '$in': selectedUsers } }
@@ -39,7 +43,7 @@ module.exports = {
     coll: 'timeline_entry',
     match: { notifies: { '$in': selectedUsers } },
     sort: { createdAt: -1 },
-    limit: 1000
+    limit: 1000,
     coll: 'tournament_leaderboard',
     match: { u: { '$in': selectedUsers } }
   }, ...[1,2,3,4,5,11,12,13,14,15,16,17,18].map(pt => {
