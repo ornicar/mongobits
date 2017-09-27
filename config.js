@@ -4,13 +4,15 @@ const selectedUsers = [
   'lakinwecker', 'toadofsky', 'veloce', 'clarkey', 'flugsio', 'happy0', 'freefal',
   'kingscrusher-youtube', 'rzenaikrzys', 'vsim', 'bosspotato', 'opperwezen', 'sparklehorse'];
 
+const selectedTeams = ['iran', 'kristos-team-chess-players', 'russian-chess-players', 'coders'];
+
 module.exports = {
   source: 'mongodb://91.121.143.131:28945/lichess',
   dest: 'mongodb://localhost:27017/lichess',
   plan: [{
     name: 'Selected users',
     coll: 'user4',
-    match: { _id: { '$in': selectedUsers } }
+    match: { _id: { $in: [...selectedUsers, 'lichess'] } }
   }, {
     coll: 'flag'
   }, {
@@ -27,25 +29,28 @@ module.exports = {
     limit: 500
   }, {
     coll: 'study',
-    match: { ownerId: { '$in': selectedUsers.filter(u => u !== 'lance5500') } }
+    match: { ownerId: { $in: selectedUsers.filter(u => u !== 'lance5500') } }
+  }, {
+    coll: 'bookmark',
+    match: { u: { $in: selectedUsers } }
   }, {
     coll: 'config',
-    match: { _id: { '$in': selectedUsers } }
+    match: { _id: { $in: selectedUsers } }
   }, {
     coll: 'history3',
-    match: { _id: { '$in': selectedUsers } }
+    match: { _id: { $in: selectedUsers } }
   }, {
     coll: 'timeline_entry',
-    match: { users: { '$in': selectedUsers } },
+    match: { users: { $in: selectedUsers } },
     sort: { date: -1 },
     limit: 1000
   }, {
     coll: 'timeline_entry',
-    match: { notifies: { '$in': selectedUsers } },
+    match: { notifies: { $in: selectedUsers } },
     sort: { createdAt: -1 },
     limit: 1000,
     coll: 'tournament_leaderboard',
-    match: { u: { '$in': selectedUsers } }
+    match: { u: { $in: selectedUsers } }
   }, ...[1,2,3,4,5,11,12,13,14,15,16,17,18].map(pt => {
     return {
       name: 'Ranking of perf ' + pt,
@@ -59,7 +64,7 @@ module.exports = {
     };
   }), {
     coll: 'pref',
-    match: { _id: { '$in': selectedUsers } }
+    match: { _id: { $in: selectedUsers } }
   }, {
     coll: 'activity',
     match: {
@@ -75,7 +80,7 @@ module.exports = {
       },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { studyId: { '$in': foreignFieldValues }};
+        return { studyId: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -85,7 +90,7 @@ module.exports = {
       from: { coll: 'study' },
       distinct: 'uids',
       match(uids) {
-        return { _id: { '$in': uids }};
+        return { _id: { $in: uids }};
       }
     }
   }, {
@@ -101,7 +106,7 @@ module.exports = {
       },
       foreignField: 'hostId',
       match(foreignFieldValues) {
-        return { _id: { '$in': foreignFieldValues }};
+        return { _id: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -118,7 +123,7 @@ module.exports = {
       from: { coll: 'tournament2' },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { tid: { '$in': foreignFieldValues }};
+        return { tid: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -131,7 +136,7 @@ module.exports = {
       from: { coll: 'tournament2' },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { tid: { '$in': foreignFieldValues }};
+        return { tid: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -140,7 +145,7 @@ module.exports = {
       from: { coll: 'tournament2' },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { tid: { '$in': foreignFieldValues }};
+        return { tid: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -150,7 +155,7 @@ module.exports = {
       from: { coll: 'tournament_player' },
       foreignField: 'uid',
       match(foreignFieldValues) {
-        return { _id: { '$in': foreignFieldValues }};
+        return { _id: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -158,7 +163,7 @@ module.exports = {
   }, {
     coll: 'team_member',
     match: {
-      team: { '$in': ['iran', 'kristos-team-chess-players', 'russian-chess-players', 'coders'] }
+      team: { $in: selectedTeams }
     }
   }, {
     coll: 'f_categ'
@@ -177,13 +182,13 @@ module.exports = {
       from: { coll: 'f_post' },
       foreignField: 'userId',
       match(foreignFieldValues) {
-        return { _id: { '$in': foreignFieldValues }};
+        return { _id: { $in: foreignFieldValues }};
       }
     }
   }, {
     name: 'Games of selected users',
     coll: 'game5',
-    match: { us: { '$in': selectedUsers } }
+    match: { us: { $in: selectedUsers } }
   }, {
     name: 'Games of strong standard users',
     coll: 'game5',
@@ -196,7 +201,7 @@ module.exports = {
       },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { us: { '$in': foreignFieldValues }};
+        return { us: { $in: foreignFieldValues }};
       }
     }
   }, {
@@ -209,7 +214,7 @@ module.exports = {
       },
       foreignField: '_id',
       match(foreignFieldValues) {
-        return { _id: { '$in': foreignFieldValues }};
+        return { _id: { $in: foreignFieldValues }};
       }
     }
   }]
