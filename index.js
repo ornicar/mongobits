@@ -58,6 +58,23 @@ async function runPlan(dbs, plan) {
   log(`Inserted ${nb} documents`);
 }
 
+async function ensureIndexes(dbs) {
+  const colls = await dbs.source.collections();
+  for (let coll of colls) {
+    const indexes = await coll.indexes();
+    for (let c of indexes) {
+      if (c.name !== '_id_') {
+        console.log(`[${c.ns}]`, c);
+        const key = c.key;
+        ['key', 'ns', 'v'].forEach(k => {
+          delete c[k];
+        });
+        await dbs.dest.collection(coll.collectionName).ensureIndex(key, c);
+      }
+    }
+  }
+}
+
 async function run() {
   const dbs = await Promise.all([
     MongoClient.connect(conf.source),
@@ -70,6 +87,7 @@ async function run() {
     await acc;
     return await runPlan(dbs, plan);
   }, Promise.resolve(0));
+  await ensureIndexes(dbs);
   dbs.source.close();
   dbs.dest.close();
   console.log("Successfully closed both DBs");
