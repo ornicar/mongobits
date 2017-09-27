@@ -6,13 +6,19 @@ const selectedUsers = [
 
 const selectedTeams = ['iran', 'kristos-team-chess-players', 'russian-chess-players', 'coders'];
 
+function transformUser(u) {
+  u.salt = '';
+  u.password = '11a6efa91890f4fdbdddf3c344d40b8a96eb5d5d'; // 'password'
+}
+
 module.exports = {
   source: 'mongodb://91.121.143.131:28945/lichess',
   dest: 'mongodb://localhost:27017/lichess',
   plan: [{
     name: 'Selected users',
     coll: 'user4',
-    match: { _id: { $in: [...selectedUsers, 'lichess'] } }
+    match: { _id: { $in: [...selectedUsers, 'lichess'] } },
+    transform: transformUser
   }, {
     coll: 'flag'
   }, {
@@ -95,7 +101,8 @@ module.exports = {
       match(uids) {
         return { _id: { $in: uids }};
       }
-    }
+    },
+    transform: transformUser
   }, {
     coll: 'simul',
     sort: { createdAt: -1 },
@@ -111,7 +118,8 @@ module.exports = {
       match(foreignFieldValues) {
         return { _id: { $in: foreignFieldValues }};
       }
-    }
+    },
+    transform: transformUser
   }, {
     coll: 'relation',
     match: {
@@ -160,7 +168,8 @@ module.exports = {
       match(foreignFieldValues) {
         return { _id: { $in: foreignFieldValues }};
       }
-    }
+    },
+    transform: transformUser
   }, {
     coll: 'team'
   }, {
@@ -187,7 +196,8 @@ module.exports = {
       match(foreignFieldValues) {
         return { _id: { $in: foreignFieldValues }};
       }
-    }
+    },
+    transform: transformUser
   }, {
     name: 'Games of selected users',
     coll: 'game5',

@@ -53,6 +53,7 @@ async function runPlan(dbs, plan) {
     nb++;
     if (nb % 1000 === 0) log(nb);
     const doc = await cursor.next();
+    if (plan.transform) plan.transform(doc);
     await insert(destColl, doc);
   }
   log(`Inserted ${nb} documents`);
