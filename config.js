@@ -1,6 +1,7 @@
 const selectedUsers = [
-  'thibault', 'astanehchess', 'penguingim1', 'chess-network', 'fishyvischy',
-  'programfox', 'isaacly', 'revoof', 'arex', 'lance5500', 'arka50', 'lovlas', 'tonyro'];
+  'astanehchess', 'penguingim1', 'chess-network', 'fishyvischy', 'thibault',
+  'programfox', 'isaacly', 'revoof', 'arex', 'lance5500', 'arka50', 'lovlas', 'tonyro',
+  'lakin', 'toadofsky', 'veloce', 'clarkey', 'flugsio', 'happy0', 'freefal'];
 
 module.exports = {
   source: 'mongodb://91.121.143.131:28945/lichess',
@@ -30,6 +31,15 @@ module.exports = {
     coll: 'history3',
     match: { _id: { '$in': selectedUsers } }
   }, {
+    coll: 'timeline_entry',
+    match: { users: { '$in': selectedUsers } },
+    sort: { date: -1 },
+    limit: 1000
+  }, {
+    coll: 'timeline_entry',
+    match: { notifies: { '$in': selectedUsers } },
+    sort: { createdAt: -1 },
+    limit: 1000
     coll: 'tournament_leaderboard',
     match: { u: { '$in': selectedUsers } }
   }, ...[1,2,3,4,5,11,12,13,14,15,16,17,18].map(pt => {
@@ -62,6 +72,16 @@ module.exports = {
       foreignField: '_id',
       match(foreignFieldValues) {
         return { studyId: { '$in': foreignFieldValues }};
+      }
+    }
+  }, {
+    name: 'Users of studies',
+    coll: 'user4',
+    each: {
+      from: { coll: 'study' },
+      distinct: 'uids',
+      match(uids) {
+        return { _id: { '$in': uids }};
       }
     }
   }, {
@@ -141,11 +161,11 @@ module.exports = {
   }, {
     coll: 'f_topic',
     sort: { createdAt: -1 },
-    limit: 10000
+    limit: 5000
   }, {
     coll: 'f_post',
     sort: { createdAt: -1 },
-    limit: 100000
+    limit: 30000
   }, {
     name: 'Users of forum posts',
     coll: 'user4',
@@ -168,9 +188,9 @@ module.exports = {
         coll: 'user4',
         match: { engine: false, booster: false },
         sort: { 'perfs.standard.gl.r': -1 },
-        limit: 100,
-        foreignField: '_id'
+        limit: 100
       },
+      foreignField: '_id',
       match(foreignFieldValues) {
         return { us: { '$in': foreignFieldValues }};
       }
@@ -181,7 +201,7 @@ module.exports = {
       from: {
         coll: 'game5',
         match: { an: true },
-        limit: 1000
+        limit: 10000
       },
       foreignField: '_id',
       match(foreignFieldValues) {
@@ -190,15 +210,3 @@ module.exports = {
     }
   }]
 };
-/* plan: {
- *   skip?: boolean,
- *   coll: string,
- *   match?: mongodb selector object,
- *   limit?: number,
- *   each: {
- *     coll: string,
- *     foreignField: string,
- *     match: [string] => object selector
- *   }
- * }
- */

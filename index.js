@@ -7,11 +7,15 @@ async function cursorOf(dbs, plan) {
   const sourceColl = collOf(dbs.source, plan);
   if (plan.each) {
     const from = plan.each.from;
+    const destColl = collOf(dbs.dest, from);
+    if (plan.each.distinct) {
+      const values = await destColl.distinct(plan.each.distinct);
+      return sourceColl.find(plan.each.match(values));
+    }
     const limit = from.limit ? from.limit * 3 : undefined;
-    const cursor = makeCursor(collOf(dbs.dest, from), from.match, { [plan.each.foreignField]: true }, from.sort, limit);
+    const cursor = makeCursor(destColl, from.match, { [plan.each.foreignField]: true }, from.sort, limit);
     const docs = await cursor.toArray();
-    const values = Array.from(new Set(docs.map(o => o[plan.each.foreignField]))).slice(0, plan.limit || Number.MAX_VALUE);
-    console.log(values.slice(0, 10));
+    const values = Array.from(new Set(docs.map(o => o[plan.each.foreignField]))).slice(0, plan.each.from.limit || Number.MAX_VALUE);
     return sourceColl.find(plan.each.match(values));
   }
   return makeCursor(sourceColl, plan.match, plan.projection, plan.sort, plan.limit);
